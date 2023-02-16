@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 from torchvision.datasets import MNIST
 from torch.optim import Adam
-from torch.optim.lr_scheduler import StepLR
 
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 
@@ -20,9 +19,7 @@ class Net(LightningModule):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
 
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.fc1 = nn.Linear(9216, hidden_size)
+        self.fc1 = nn.Linear(28 * 28, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 10)
 
     def add_model_specific_args(parent_parser):
@@ -33,12 +30,7 @@ class Net(LightningModule):
         return parent_parser
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = torch.flatten(x, 1)
+        x = x.view(x.size(0), -1)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
@@ -53,8 +45,7 @@ class Net(LightningModule):
 
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
-        scheduler = StepLR(optimizer, step_size=1)
-        return {"optimizer": optimizer, "lr_scheduler": scheduler}
+        return optimizer
 
     def training_step(self, batch, batch_idx):
         data, target = batch
