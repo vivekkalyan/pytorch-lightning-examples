@@ -9,7 +9,7 @@ from torchvision.datasets import MNIST
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule, Trainer, seed_everything
 
 
 class Net(LightningModule):
@@ -52,6 +52,8 @@ class Net(LightningModule):
 
 
 if __name__ == "__main__":
+    seed_everything(42)
+
     net = Net()
     trainer = Trainer(accelerator="gpu", max_epochs=10)
     trainer.fit(net)
