@@ -10,11 +10,13 @@ from torchvision.datasets import MNIST
 from torch.optim import Adam
 
 from pytorch_lightning import LightningModule, Trainer, seed_everything
+from pytorch_lightning.loggers import TensorBoardLogger
 
 
 class Net(LightningModule):
     def __init__(self, batch_size, hidden_size, learning_rate):
         super(Net, self).__init__()
+        self.save_hyperparameters()
 
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -51,6 +53,7 @@ class Net(LightningModule):
         data, target = batch
         output = self.forward(data)
         loss = F.nll_loss(output, target)
+        self.log("loss", loss)
         return {"loss": loss}
 
 
@@ -61,6 +64,8 @@ if __name__ == "__main__":
     parser = Net.add_model_specific_args(parser)
     args = parser.parse_args()
 
+    logger = TensorBoardLogger(save_dir=".", default_hp_metric=False)
+
     net = Net(**vars(args))
-    trainer = Trainer(accelerator="gpu", max_epochs=10)
+    trainer = Trainer(accelerator="gpu", max_epochs=10, logger=logger)
     trainer.fit(net)
