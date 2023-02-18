@@ -14,7 +14,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 
 class Net(LightningModule):
-    def __init__(self, batch_size, hidden_size, learning_rate):
+    def __init__(self, batch_size, hidden_size, learning_rate, **kwargs):
         super(Net, self).__init__()
         self.save_hyperparameters()
 
@@ -62,10 +62,13 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser = Net.add_model_specific_args(parser)
+    parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args()
 
     logger = TensorBoardLogger(save_dir=".", default_hp_metric=False)
 
     net = Net(**vars(args))
-    trainer = Trainer(accelerator="gpu", max_epochs=10, logger=logger)
+    trainer = Trainer.from_argparse_args(
+        args, accelerator="gpu", max_epochs=10, logger=logger
+    )
     trainer.fit(net)
