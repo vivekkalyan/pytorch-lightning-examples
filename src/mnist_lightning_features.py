@@ -55,6 +55,9 @@ class Net(LightningModule):
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
+    def on_train_start(self):
+        self.logger.log_hyperparams(self.hparams, {"val/accuracy": 0})
+
     def training_step(self, batch, batch_idx):
         data, target = batch
         output = self.forward(data)
