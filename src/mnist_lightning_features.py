@@ -45,6 +45,12 @@ class Net(LightningModule):
         )
         return DataLoader(mnist_train, batch_size=self.batch_size)
 
+    def val_dataloader(self):
+        mnist_train = MNIST(
+            os.getcwd(), train=False, download=True, transform=transforms.ToTensor()
+        )
+        return DataLoader(mnist_train, batch_size=self.batch_size)
+
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
@@ -53,8 +59,22 @@ class Net(LightningModule):
         data, target = batch
         output = self.forward(data)
         loss = F.nll_loss(output, target)
-        self.log("loss", loss)
+        self.log("train/loss", loss)
         return {"loss": loss}
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        output = self.forward(data)
+        loss = F.nll_loss(output, target)
+        pred = output.argmax(dim=1, keepdim=True)
+        correct = pred.squeeze(1).eq(target).sum().item()
+        self.log("val/loss", loss)
+        return {"loss": loss, "correct": correct, "total": len(target)}
+
+    def validation_epoch_end(self, outs):
+        num_correct = sum(map(lambda x: x[f"correct"], outs), 0)
+        num_total = sum(map(lambda x: x[f"total"], outs), 0)
+        self.log("val/accuracy", num_correct / num_total)
 
 
 if __name__ == "__main__":
