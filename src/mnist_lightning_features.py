@@ -11,7 +11,7 @@ from torch.optim import Adam
 
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 
 class Net(LightningModule):
@@ -96,9 +96,12 @@ if __name__ == "__main__":
     checkpoint_callback = ModelCheckpoint(
         monitor="val/accuracy", mode="max", verbose=True
     )
+    early_stopping_callback = EarlyStopping(
+        monitor="val/accuracy", mode="max", patience=2
+    )
     trainer = Trainer.from_argparse_args(
         args,
-        callbacks=[checkpoint_callback],
+        callbacks=[checkpoint_callback, early_stopping_callback],
         accelerator="gpu",
         max_epochs=10,
         logger=logger,
