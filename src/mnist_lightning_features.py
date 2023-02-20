@@ -11,6 +11,7 @@ from torch.optim import Adam
 
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 
 class Net(LightningModule):
@@ -91,7 +92,15 @@ if __name__ == "__main__":
     logger = TensorBoardLogger(save_dir=".", default_hp_metric=False)
 
     net = Net(**vars(args))
+
+    checkpoint_callback = ModelCheckpoint(
+        monitor="val/accuracy", mode="max", verbose=True
+    )
     trainer = Trainer.from_argparse_args(
-        args, accelerator="gpu", max_epochs=10, logger=logger
+        args,
+        callbacks=[checkpoint_callback],
+        accelerator="gpu",
+        max_epochs=10,
+        logger=logger,
     )
     trainer.fit(net)
